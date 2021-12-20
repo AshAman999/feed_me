@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+
+import 'submit_message_screen.dart';
 
 class ImagePicker extends StatefulWidget {
   final List<CameraDescription>? cameras;
@@ -41,6 +45,8 @@ class _ImagePickerState extends State<ImagePicker> {
     super.dispose();
   }
 
+  String instruction = "Click your meal";
+  IconData useicon = Icons.camera_alt_outlined;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,11 +56,14 @@ class _ImagePickerState extends State<ImagePicker> {
         backgroundColor: Colors.transparent,
         leading: Container(
           margin: const EdgeInsets.only(left: 10),
-          child: const CircleAvatar(
+          child: CircleAvatar(
             backgroundColor: Colors.green,
             radius: 10,
             child: BackButton(
               color: Colors.white,
+              onPressed: () {
+                Navigator.pop(context);
+              },
             ),
           ),
         ),
@@ -115,7 +124,14 @@ class _ImagePickerState extends State<ImagePicker> {
                                     child: SizedBox(
                                       height: 400,
                                       width: 400,
-                                      child: CameraPreview(controller),
+                                      child: pictureFile == null
+                                          ? CameraPreview(controller)
+                                          : Image(
+                                              fit: BoxFit.cover,
+                                              image: FileImage(
+                                                  File(pictureFile!.path),
+                                                  scale: 1),
+                                            ),
                                     ),
                                   ),
                                 ),
@@ -140,24 +156,36 @@ class _ImagePickerState extends State<ImagePicker> {
                     ),
                     Container(
                       margin: const EdgeInsets.only(top: 40, bottom: 20),
-                      child: const Text(
-                        'Click your meal',
-                        style: TextStyle(
+                      child: Text(
+                        instruction,
+                        style: const TextStyle(
                             fontSize: 20, fontWeight: FontWeight.w600),
                       ),
                     ),
                     GestureDetector(
                       onTap: () async {
+                        setState(() {
+                          instruction = 'Will you eat this?';
+                          useicon = Icons.check;
+                        });
                         pictureFile = await controller.takePicture();
                         setState(() {
                           print(pictureFile!.path);
                         });
+                        if (useicon == Icons.check) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Message(),
+                            ),
+                          );
+                        }
                       },
-                      child: const CircleAvatar(
+                      child: CircleAvatar(
                         backgroundColor: Colors.green,
                         radius: 25,
                         child: Icon(
-                          Icons.camera_alt_rounded,
+                          useicon,
                           color: Colors.white,
                           size: 30,
                         ),
