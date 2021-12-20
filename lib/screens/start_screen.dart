@@ -1,3 +1,5 @@
+import 'package:camera/camera.dart';
+import 'package:feed_me/screens/image_click_screen.dart';
 import 'package:flutter/material.dart';
 
 class StartScreen extends StatelessWidget {
@@ -15,8 +17,15 @@ class StartScreen extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
+                availableCameras().then(
+                  (value) => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ImagePicker(cameras: value),
+                    ),
+                  ),
+                );
                 // navigate to the next screen
-                Navigator.pushNamed(context, '/imagePicker');
               },
               child: const Text(
                 'Share your meal',
