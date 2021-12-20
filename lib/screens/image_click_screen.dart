@@ -40,6 +40,7 @@ class _ImagePickerState extends State<ImagePicker> {
 
   @override
   void dispose() {
+    pictureFile = null;
     controller.dispose();
     // Dispose of the controller when the widget is disposed.
     super.dispose();
@@ -164,15 +165,19 @@ class _ImagePickerState extends State<ImagePicker> {
                     ),
                     GestureDetector(
                       onTap: () async {
-                        setState(() {
-                          instruction = 'Will you eat this?';
-                          useicon = Icons.check;
-                        });
                         pictureFile = await controller.takePicture();
                         setState(() {
                           print(pictureFile!.path);
                         });
                         if (useicon == Icons.check) {
+                          //                             final refr = FirebaseStorage.instance
+                          //       .ref("uploadedImages/${randomAlphaNumeric(8)}.jpg");
+                          //   final task = refr.putFile(File(pictureFile!.path));
+                          //   final snapshot = await task.whenComplete(() {});
+                          //  var  imglink = await snapshot.ref.getDownloadURL();
+                          setState(() {
+                            pictureFile = null;
+                          });
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -180,6 +185,12 @@ class _ImagePickerState extends State<ImagePicker> {
                             ),
                           );
                         }
+                        setState(
+                          () {
+                            instruction = 'Will you eat this?';
+                            useicon = Icons.check;
+                          },
+                        );
                       },
                       child: CircleAvatar(
                         backgroundColor: Colors.green,
