@@ -2,7 +2,7 @@
     package="com.example.feed_me">
    <application
         android:label="feed_me"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
