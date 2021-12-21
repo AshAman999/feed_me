@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class Message extends StatefulWidget {
-  const Message({Key? key}) : super(key: key);
+class SubmitMessage extends StatefulWidget {
+  const SubmitMessage({Key? key}) : super(key: key);
 
   @override
-  _MessageState createState() => _MessageState();
+  _SubmitMessageState createState() => _SubmitMessageState();
 }
 
-class _MessageState extends State<Message> {
+class _SubmitMessageState extends State<SubmitMessage> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(

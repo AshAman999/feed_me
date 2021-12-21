@@ -1,8 +1,11 @@
 import 'dart:io';
-
 import 'package:camera/camera.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:random_string/random_string.dart';
 
+import 'notification_click_screen.dart';
 import 'submit_message_screen.dart';
 
 class ImagePicker extends StatefulWidget {
@@ -18,13 +21,16 @@ class ImagePicker extends StatefulWidget {
 }
 
 class _ImagePickerState extends State<ImagePicker> {
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
   late CameraController controller;
   XFile? pictureFile;
   @override
   void initState() {
     controller = CameraController(
       widget.cameras![0],
-      ResolutionPreset.max,
+      ResolutionPreset.medium,
     );
     controller.initialize().then(
       (_) {
@@ -35,8 +41,70 @@ class _ImagePickerState extends State<ImagePicker> {
       },
     );
     super.initState();
+    requestPermissions();
+    var androidSettings =
+        const AndroidInitializationSettings('@mipmap/ic_launcher');
+    var iOSSettings = const IOSInitializationSettings(
+      requestSoundPermission: false,
+      requestBadgePermission: false,
+      requestAlertPermission: false,
+    );
+
+    var initSetttings =
+        InitializationSettings(android: androidSettings, iOS: iOSSettings);
+    flutterLocalNotificationsPlugin.initialize(
+      initSetttings,
+      onSelectNotification: (payload) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => NotificationClickScreen(
+              imgurl: payload!,
+            ),
+          ),
+        );
+      },
+    );
     // To display the current output from the Camera,
   }
+
+  void requestPermissions() {
+    flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+  }
+
+  showSimpleNotification(String imgurl) async {
+    var androidDetails = const AndroidNotificationDetails(
+      'id',
+      'channel ',
+      channelDescription: 'channelDescription',
+      priority: Priority.high,
+      importance: Importance.max,
+    );
+    var iOSDetails = const IOSNotificationDetails();
+    var platformDetails =
+        NotificationDetails(android: androidDetails, iOS: iOSDetails);
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'Feed Me',
+      'Mmmm 😋, Thanks,the food was really delicious !!!',
+      platformDetails,
+      payload: imgurl,
+    );
+  }
+
+  // Future onClickNotification(String payload) {
+  //   // Navigator.of(context).push(MaterialPageRoute(builder: (_) {
+  //   //   return null;
+  //   // }));
+  //   return
+  //   print('I am clicked');
+  // }
 
   @override
   void dispose() {
@@ -48,6 +116,7 @@ class _ImagePickerState extends State<ImagePicker> {
 
   String instruction = "Click your meal";
   IconData useicon = Icons.camera_alt_outlined;
+  bool isLoading = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -165,23 +234,29 @@ class _ImagePickerState extends State<ImagePicker> {
                     ),
                     GestureDetector(
                       onTap: () async {
+                        setState(() {
+                          isLoading = true;
+                        });
                         pictureFile = await controller.takePicture();
                         setState(() {
+                          // ignore: avoid_print
                           print(pictureFile!.path);
                         });
                         if (useicon == Icons.check) {
-                          //                             final refr = FirebaseStorage.instance
-                          //       .ref("uploadedImages/${randomAlphaNumeric(8)}.jpg");
-                          //   final task = refr.putFile(File(pictureFile!.path));
-                          //   final snapshot = await task.whenComplete(() {});
-                          //  var  imglink = await snapshot.ref.getDownloadURL();
+                          final refr = FirebaseStorage.instance.ref(
+                              "uploadedImages/${randomAlphaNumeric(8)}.jpg");
+                          final task = refr.putFile(File(pictureFile!.path));
+                          final snapshot = await task.whenComplete(() {});
+                          var imglink = await snapshot.ref.getDownloadURL();
                           setState(() {
                             pictureFile = null;
                           });
+                          await showSimpleNotification(imglink);
+                          debugPrint(imglink);
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const Message(),
+                              builder: (context) => const SubmitMessage(),
                             ),
                           );
                         }
@@ -189,18 +264,23 @@ class _ImagePickerState extends State<ImagePicker> {
                           () {
                             instruction = 'Will you eat this?';
                             useicon = Icons.check;
+                            isLoading = false;
                           },
                         );
                       },
-                      child: CircleAvatar(
-                        backgroundColor: Colors.green,
-                        radius: 25,
-                        child: Icon(
-                          useicon,
-                          color: Colors.white,
-                          size: 30,
-                        ),
-                      ),
+                      child: isLoading
+                          ? const CircularProgressIndicator(
+                              color: Colors.green,
+                            )
+                          : CircleAvatar(
+                              backgroundColor: Colors.green,
+                              radius: 25,
+                              child: Icon(
+                                useicon,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                            ),
                     ),
                   ],
                 ),
