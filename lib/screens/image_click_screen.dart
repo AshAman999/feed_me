@@ -234,15 +234,10 @@ class _ImagePickerState extends State<ImagePicker> {
                     ),
                     GestureDetector(
                       onTap: () async {
-                        setState(() {
-                          isLoading = true;
-                        });
-                        pictureFile = await controller.takePicture();
-                        setState(() {
-                          // ignore: avoid_print
-                          print(pictureFile!.path);
-                        });
                         if (useicon == Icons.check) {
+                          setState(() {
+                            isLoading = true;
+                          });
                           final refr = FirebaseStorage.instance.ref(
                               "uploadedImages/${randomAlphaNumeric(8)}.jpg");
                           final task = refr.putFile(File(pictureFile!.path));
@@ -259,14 +254,26 @@ class _ImagePickerState extends State<ImagePicker> {
                               builder: (context) => const SubmitMessage(),
                             ),
                           );
-                        }
-                        setState(
-                          () {
-                            instruction = 'Will you eat this?';
-                            useicon = Icons.check;
+                          setState(() {
                             isLoading = false;
-                          },
-                        );
+                          });
+                        } else {
+                          setState(() {
+                            isLoading = true;
+                          });
+                          pictureFile = await controller.takePicture();
+                          setState(() {
+                            // ignore: avoid_print
+                            print(pictureFile!.path);
+                          });
+                          setState(
+                            () {
+                              instruction = 'Will you eat this?';
+                              useicon = Icons.check;
+                              isLoading = false;
+                            },
+                          );
+                        }
                       },
                       child: isLoading
                           ? const CircularProgressIndicator(
